@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-__author__      = 'Radoslaw Matusiak'
-__copyright__   = 'Copyright (c) 2017 Radoslaw Matusiak'
-__license__     = 'MIT'
-__version__     = '0.3'
+__author__ = "Radoslaw Matusiak"
+__copyright__ = "Copyright (c) 2017 Radoslaw Matusiak"
+__license__ = "MIT"
+__version__ = "0.4"
 
 import json
 import logging
@@ -15,48 +15,68 @@ import threading
 import time
 import queue
 
-BAND = ['common', 'am', 'fm', 'dab']
-CD_PLAYBACK = ['play', 'stop', 'pause', 'previous', 'next', 'fast_reverse_start',
-               'fast_reverse_end', 'fast_forward_start', 'fast_forward_end', 'track_select ']
-DIR = ['next', 'previous']
-PLAYBACK = ['play', 'stop', 'pause', 'play_pause', 'previous', 'next', 'fast_reverse_start',
-            'fast_reverse_end', 'fast_forward_start', 'fast_forward_end']
-PRESET_BAND = ['common', 'separate']
-ZONES = ['main', 'zone2', 'zone3', 'zone4']
-SERVICE_INFO_TYPE = ['account_list', 'licensing', 'activation_code']
+BAND = ["common", "am", "fm", "dab"]
+CD_PLAYBACK = [
+    "play",
+    "stop",
+    "pause",
+    "previous",
+    "next",
+    "fast_reverse_start",
+    "fast_reverse_end",
+    "fast_forward_start",
+    "fast_forward_end",
+    "track_select ",
+]
+DIR = ["next", "previous"]
+PLAYBACK = [
+    "play",
+    "stop",
+    "pause",
+    "play_pause",
+    "previous",
+    "next",
+    "fast_reverse_start",
+    "fast_reverse_end",
+    "fast_forward_start",
+    "fast_forward_end",
+]
+PRESET_BAND = ["common", "separate"]
+ZONES = ["main", "zone2", "zone3", "zone4"]
+SERVICE_INFO_TYPE = ["account_list", "licensing", "activation_code"]
 SLEEP = [0, 30, 60, 90, 120]
-TUNING = ['up', 'down', 'cancel', 'auto_up', 'auto_down', 'tp_up', 'tp_down', 'direct']
-TYPE = ['select', 'play', 'return']
-POWER = ['on', 'standby', 'toggle']
-LIST_ID = ['main', 'auto_complete', 'search_artist', 'search_track']
-LANG = ['en', 'ja', 'fr', 'de', 'es', 'ru', 'it', 'zh']
-WIFI = ['none', 'wep', 'wpa2-psk(aes)', 'mixed_mode']
-WIFI_DIRECT = ['none', 'wpa2-psk(aes)']
-STANDBY = ['off', 'on', 'auto']
+TUNING = ["up", "down", "cancel", "auto_up", "auto_down", "tp_up", "tp_down", "direct"]
+TYPE = ["select", "play", "return"]
+POWER = ["on", "standby", "toggle"]
+LIST_ID = ["main", "auto_complete", "search_artist", "search_track"]
+LANG = ["en", "ja", "fr", "de", "es", "ru", "it", "zh"]
+WIFI = ["none", "wep", "wpa2-psk(aes)", "mixed_mode"]
+WIFI_DIRECT = ["none", "wpa2-psk(aes)"]
+STANDBY = ["off", "on", "auto"]
 SCENES = [1, 2, 3, 4, 5, 6, 7, 8]
 
 RESPONSE_CODE = {
-    0: 'Successful request',
-    1: 'Initializing',
-    2: 'Internal Error',
-    3: 'Invalid Request (A method did not exist, a method wasn\'t appropriate etc.)',
-    4: 'Invalid Parameter (Out of range, invalid characters etc.)',
-    5: 'Guarded (Unable to setup in current status etc.)',
-    6: 'Time Out',
-    99: 'Firmware Updating',
-    100: 'Access Error',
-    101: 'Other Errors',
-    102: 'Wrong User Name',
-    103: 'Wrong Password',
-    104: 'Account Expired',
-    105: 'Account Disconnected/Gone Off/Shut Down',
-    106: 'Account Number Reached to the Limit',
-    107: 'Server Maintenance',
-    108: 'Invalid Account',
-    109: 'License Error',
-    110: 'Read Only Mode',
-    111: 'Max Stations',
-    112: 'Access Denied'
+    0: "Successful request",
+    1: "Initializing",
+    2: "Internal Error",
+    3: "Invalid Request (A method did not exist, a method wasn't appropriate etc.)",
+    4: "Invalid Parameter (Out of range, invalid characters etc.)",
+    5: "Guarded (Unable to setup in current status etc.)",
+    6: "Time Out",
+    99: "Firmware Updating",
+    100: "Access Error",
+    101: "Other Errors",
+    102: "Wrong User Name",
+    103: "Wrong Password",
+    104: "Account Expired",
+    105: "Account Disconnected/Gone Off/Shut Down",
+    106: "Account Number Reached to the Limit",
+    107: "Server Maintenance",
+    108: "Invalid Account",
+    109: "License Error",
+    110: "Read Only Mode",
+    111: "Max Stations",
+    112: "Access Denied",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,35 +108,35 @@ class BaseDevice:
     def _init_socket(self):
         try:
             self._socket = socket.socket(
-                socket.AF_INET,     # IPv4
-                socket.SOCK_DGRAM   # UDP
+                socket.AF_INET,  # IPv4
+                socket.SOCK_DGRAM,  # UDP
             )
-            self._socket.bind(('', 0))
+            self._socket.bind(("", 0))
             self._udp_port = self._socket.getsockname()[1]
         except socket.error as err:
             raise err
         else:
             socket_thread = threading.Thread(
-                name="SocketThread", target=self._socket_worker)
+                name="SocketThread", target=self._socket_worker
+            )
             socket_thread.setDaemon(True)
             socket_thread.start()
 
             worker_thread = threading.Thread(
-                name="WorkerThread", target=self._message_worker)
+                name="WorkerThread", target=self._message_worker
+            )
             worker_thread.setDaemon(True)
             worker_thread.start()
 
-            self._headers.update({
-                "X-AppName": "MusicCast/1.0",
-                "X-AppPort": str(self._udp_port)
-            })
+            self._headers.update(
+                {"X-AppName": "MusicCast/1.0", "X-AppPort": str(self._udp_port)}
+            )
 
     def _message_worker(self):
         """Loop through messages and pass them on to right device"""
         _LOGGER.debug("Starting Worker Thread.")
 
         while True:
-
             if not self._messages.empty():
                 message = self._messages.get()
 
@@ -135,7 +155,7 @@ class BaseDevice:
         """Socket Loop that fills message queue"""
         while True:
             try:
-                data, addr = self._socket.recvfrom(1024)    # buffer size is 1024 bytes
+                data, addr = self._socket.recvfrom(1024)  # buffer size is 1024 bytes
             except OSError as err:
                 _LOGGER.error(err)
             else:
@@ -162,6 +182,7 @@ class Device(BaseDevice):
             handle_event -- callback function with one parameter (the message).
         """
         super().__init__(ip, handle_event)
+
     # end-of-method __init__
 
     def request(self, *args):
@@ -177,6 +198,7 @@ class Device(BaseDevice):
         else:
             # ...otherwise unpack tuple and send POST
             return self.post(*(args[0]))
+
     # end-of-method request
 
     def get(self, uri):
@@ -187,6 +209,7 @@ class Device(BaseDevice):
         """
         r = requests.get(uri.format(host=self.ip), headers=self._headers)
         return r
+
     # end-of-method request
 
     def post(self, uri, data):
@@ -196,11 +219,16 @@ class Device(BaseDevice):
             uri -- URI to send POST
             data -- POST data
         """
-        r = requests.post(uri.format(host=self.ip), data=json.dumps(data), headers=self._headers)
+        r = requests.post(
+            uri.format(host=self.ip), data=json.dumps(data), headers=self._headers
+        )
         return r
+
     # end-of-method post
 
     pass
+
+
 # end-of-class Device
 
 
@@ -237,6 +265,7 @@ class AsyncDevice(BaseDevice):
         else:
             # ...otherwise unpack tuple and send POST
             return await self.post(*(args[0]))
+
     # end-of-method request
 
     async def get(self, uri):
@@ -246,6 +275,7 @@ class AsyncDevice(BaseDevice):
             uri -- URI to request
         """
         return await self.client.get(uri.format(host=self.ip), headers=self._headers)
+
     # end-of-method get
 
     async def post(self, uri, data):
@@ -255,10 +285,15 @@ class AsyncDevice(BaseDevice):
             uri -- URI to send POST
             data -- POST data
         """
-        return await self.client.post(uri.format(host=self.ip), data=json.dumps(data), headers=self._headers)
+        return await self.client.post(
+            uri.format(host=self.ip), data=json.dumps(data), headers=self._headers
+        )
+
     # end-of-method post
 
     pass
+
+
 # end-of-class Device
 
 
@@ -266,19 +301,19 @@ class Dist:
     """APIs in regard to Link distribution related setting and getting information."""
 
     URI = {
-        'GET_DISTRIBUTION_INFO': 'http://{host}/YamahaExtendedControl/v1/dist/getDistributionInfo',
-        'SET_SERVER_INFO': 'http://{host}/YamahaExtendedControl/v1/dist/setServerInfo',
-        'SET_CLIENT_INFO': 'http://{host}/YamahaExtendedControl/v1/dist/setClientInfo',
-        'START_DISTRIBUTION': 'http://{host}/YamahaExtendedControl/v1/dist/startDistribution?num={num}',
-        'STOP_DISTRIBUTION': 'http://{host}/YamahaExtendedControl/v1/dist/stopDistribution',
-        'SET_GROUP_NAME': 'http://{host}/YamahaExtendedControl/v1/dist/setGroupName',
+        "GET_DISTRIBUTION_INFO": "http://{host}/YamahaExtendedControl/v1/dist/getDistributionInfo",
+        "SET_SERVER_INFO": "http://{host}/YamahaExtendedControl/v1/dist/setServerInfo",
+        "SET_CLIENT_INFO": "http://{host}/YamahaExtendedControl/v1/dist/setClientInfo",
+        "START_DISTRIBUTION": "http://{host}/YamahaExtendedControl/v1/dist/startDistribution?num={num}",
+        "STOP_DISTRIBUTION": "http://{host}/YamahaExtendedControl/v1/dist/stopDistribution",
+        "SET_GROUP_NAME": "http://{host}/YamahaExtendedControl/v1/dist/setGroupName",
     }
 
     @staticmethod
     def get_distribution_info():
-        """For retrieving a Device information related to Link distribution.
-        """
-        return Dist.URI['GET_DISTRIBUTION_INFO']
+        """For retrieving a Device information related to Link distribution."""
+        return Dist.URI["GET_DISTRIBUTION_INFO"]
+
     # end-of-method get_distribution_info
 
     @staticmethod
@@ -303,18 +338,19 @@ class Dist:
         """
         data = {}
 
-        data['group_id'] = group_id
+        data["group_id"] = group_id
 
         if zone is not None:
-            data['zone'] = zone
+            data["zone"] = zone
 
         if type is not None:
-            data['type'] = type
+            data["type"] = type
 
         if client_list is not None:
-            data['client_list'] = client_list
+            data["client_list"] = client_list
 
-        return Dist.URI['SET_SERVER_INFO'], data
+        return Dist.URI["SET_SERVER_INFO"], data
+
     # end-of-method set_server_info
 
     @staticmethod
@@ -336,15 +372,16 @@ class Dist:
         """
         data = {}
 
-        data['group_id'] = group_id
+        data["group_id"] = group_id
 
         if zone is not None:
-            data['zone'] = zone
+            data["zone"] = zone
 
         if server_ip_address is not None:
-            data['server_ip_address'] = server_ip_address
+            data["server_ip_address"] = server_ip_address
 
-        return Dist.URI['SET_CLIENT_INFO'], data
+        return Dist.URI["SET_CLIENT_INFO"], data
+
     # end-of-method set_client_info
 
     @staticmethod
@@ -355,7 +392,8 @@ class Dist:
         Arguments:
             num -- Specifies Link distribution number on current MusicCast Network.
         """
-        return Dist.URI['START_DISTRIBUTION'].format(host='{host}', num=num)
+        return Dist.URI["START_DISTRIBUTION"].format(host="{host}", num=num)
+
     # end-of-method start_distribution
 
     @staticmethod
@@ -363,7 +401,8 @@ class Dist:
         """For quitting Link distribution.
         This is valid to a Device that is setup as Link distribution server.
         """
-        return Dist.URI['STOP_DISTRIBUTION']
+        return Dist.URI["STOP_DISTRIBUTION"]
+
     # end-of-method stop_distribution
 
     @staticmethod
@@ -377,12 +416,15 @@ class Dist:
         """
         data = {}
 
-        data['name'] = name
+        data["name"] = name
 
-        return Dist.URI['SET_GROUP_NAME'], data
+        return Dist.URI["SET_GROUP_NAME"], data
+
     # end-of-method set_group_name
 
     pass
+
+
 # end-of-class Dist
 
 
@@ -390,62 +432,61 @@ class System:
     """System commands."""
 
     URI = {
-        'GET_DEVICE_INFO': 'http://{host}/YamahaExtendedControl/v1/system/getDeviceInfo',
-        'GET_FEATURES': 'http://{host}/YamahaExtendedControl/v1/system/getFeatures',
-        'GET_NETWORK_STATUS': 'http://{host}/YamahaExtendedControl/v1/system/getNetworkStatus',
-        'GET_FUNC_STATUS': 'http://{host}/YamahaExtendedControl/v1/system/getFuncStatus',
-        'SET_AUTOPOWER_STANDBY': 'http://{host}/YamahaExtendedControl/v1/system/setAutoPowerStandby?enable={enable}',
-        'GET_LOCATION_INFO': 'http://{host}/YamahaExtendedControl/v1/system/getLocationInfo',
-        'SEND_IR_CODE': 'http://{host}/YamahaExtendedControl/v1/system/sendIrCode?code={code}',
-        'SET_WIRED_LAN': 'http://{host}/YamahaExtendedControl/v1/system/setWiredLan',
-        'SET_WIRELESS_LAN': 'http://{host}/YamahaExtendedControl/v1/system/setWirelessLan',
-        'SET_WIRELESS_DIRECT': 'http://{host}/YamahaExtendedControl/v1/system/setWirelessDirect',
-        'SET_IP_SETTINGS': 'http://{host}/YamahaExtendedControl/v1/system/setIpSettings',
-        'SET_NETWORK_NAME': 'http://{host}/YamahaExtendedControl/v1/system/setNetworkName',
-        'SET_AIRPLAY_PIN': 'http://{host}/YamahaExtendedControl/v1/system/setAirPlayPin',
-        'GET_MAC_ADDRESS_FILTER': 'http://{host}/YamahaExtendedControl/v1/system/getMacAddressFilter',
-        'SET_MAC_ADDRESS_FILTER': 'http://{host}/YamahaExtendedControl/v1/system/setMacAddressFilter',
-        'GET_NETWORK_STANDBY': 'http://{host}/YamahaExtendedControl/v1/system/getNetworkStandby',
-        'SET_NETWORK_STANDBY': 'http://{host}/YamahaExtendedControl/v1/system/setNetworkStandby?standby={standby}',
-        'GET_BLUETOOTH_INFO': 'http://{host}/YamahaExtendedControl/v1/system/getBluetoothInfo',
-        'SET_BLUETOOTH_STANDBY': 'http://{host}/YamahaExtendedControl/v1/system/setBluetoothStandby?enable={enable}',
-        'SET_BLUETOOTH_TX_SETTING': 'http://{host}/YamahaExtendedControl/v1/system/setBluetoothTxSetting?enable={enable}',
-        'GET_BLUETOOTH_DEVICE_LIST': 'http://{host}/YamahaExtendedControl/v1/system/getBluetoothDeviceList',
-        'UPDATE_BLUETOOTH_DEVICE_LIST': 'http://{host}/YamahaExtendedControl/v1/system/updateBluetoothDeviceList',
-        'CONNECT_BLUETOOTH_DEVICE': 'http://{host}/YamahaExtendedControl/v1/system/connectBluetoothDevice?address={address}',
-        'DISCONNECT_BLUETOOTH_DEVICE': 'http://{host}/YamahaExtendedControl/v1/system/disconnectBluetoothDevice',
-        'SET_SPEAKER_A': 'http://{host}/YamahaExtendedControl/v1/system/setSpeakerA?enable={enable}',
-        'SET_SPEAKER_B': 'http://{host}/YamahaExtendedControl/v1/system/setSpeakerB?enable={enable}',
-        'SET_DIMMER': 'http://{host}/YamahaExtendedControl/v1/system/setDimmer?value={value}',
-        'SET_ZONE_B_VOLUME_SYNC': 'http://{host}/YamahaExtendedControl/v1/system/setZoneBVolumeSync?enable={enable}',
-        'SET_HDMI_OUT_1': 'http://{host}/YamahaExtendedControl/v1/system/setHdmiOut1?enable={enable}',
-        'SET_HDMI_OUT_2': 'http://{host}/YamahaExtendedControl/v1/system/setHdmiOut2?enable={enable}',
-        'GET_NAME_TEXT': 'http://{host}/YamahaExtendedControl/v1/system/getNameText?id={id}',
-        'SET_NAME_TEXT': 'http://{host}/YamahaExtendedControl/v1/system/setNameText',
-        'SET_SPEAKER_PATTERN': 'http://{host}/YamahaExtendedControl/v1/system/setSpeakerPattern?num={num}',
-        'SET_PARTYMODE': 'http://{host}/YamahaExtendedControl/v1/system/setPartyMode?enable={enable}'
-
+        "GET_DEVICE_INFO": "http://{host}/YamahaExtendedControl/v1/system/getDeviceInfo",
+        "GET_FEATURES": "http://{host}/YamahaExtendedControl/v1/system/getFeatures",
+        "GET_NETWORK_STATUS": "http://{host}/YamahaExtendedControl/v1/system/getNetworkStatus",
+        "GET_FUNC_STATUS": "http://{host}/YamahaExtendedControl/v1/system/getFuncStatus",
+        "SET_AUTOPOWER_STANDBY": "http://{host}/YamahaExtendedControl/v1/system/setAutoPowerStandby?enable={enable}",
+        "GET_LOCATION_INFO": "http://{host}/YamahaExtendedControl/v1/system/getLocationInfo",
+        "SEND_IR_CODE": "http://{host}/YamahaExtendedControl/v1/system/sendIrCode?code={code}",
+        "SET_WIRED_LAN": "http://{host}/YamahaExtendedControl/v1/system/setWiredLan",
+        "SET_WIRELESS_LAN": "http://{host}/YamahaExtendedControl/v1/system/setWirelessLan",
+        "SET_WIRELESS_DIRECT": "http://{host}/YamahaExtendedControl/v1/system/setWirelessDirect",
+        "SET_IP_SETTINGS": "http://{host}/YamahaExtendedControl/v1/system/setIpSettings",
+        "SET_NETWORK_NAME": "http://{host}/YamahaExtendedControl/v1/system/setNetworkName",
+        "SET_AIRPLAY_PIN": "http://{host}/YamahaExtendedControl/v1/system/setAirPlayPin",
+        "GET_MAC_ADDRESS_FILTER": "http://{host}/YamahaExtendedControl/v1/system/getMacAddressFilter",
+        "SET_MAC_ADDRESS_FILTER": "http://{host}/YamahaExtendedControl/v1/system/setMacAddressFilter",
+        "GET_NETWORK_STANDBY": "http://{host}/YamahaExtendedControl/v1/system/getNetworkStandby",
+        "SET_NETWORK_STANDBY": "http://{host}/YamahaExtendedControl/v1/system/setNetworkStandby?standby={standby}",
+        "GET_BLUETOOTH_INFO": "http://{host}/YamahaExtendedControl/v1/system/getBluetoothInfo",
+        "SET_BLUETOOTH_STANDBY": "http://{host}/YamahaExtendedControl/v1/system/setBluetoothStandby?enable={enable}",
+        "SET_BLUETOOTH_TX_SETTING": "http://{host}/YamahaExtendedControl/v1/system/setBluetoothTxSetting?enable={enable}",
+        "GET_BLUETOOTH_DEVICE_LIST": "http://{host}/YamahaExtendedControl/v1/system/getBluetoothDeviceList",
+        "UPDATE_BLUETOOTH_DEVICE_LIST": "http://{host}/YamahaExtendedControl/v1/system/updateBluetoothDeviceList",
+        "CONNECT_BLUETOOTH_DEVICE": "http://{host}/YamahaExtendedControl/v1/system/connectBluetoothDevice?address={address}",
+        "DISCONNECT_BLUETOOTH_DEVICE": "http://{host}/YamahaExtendedControl/v1/system/disconnectBluetoothDevice",
+        "SET_SPEAKER_A": "http://{host}/YamahaExtendedControl/v1/system/setSpeakerA?enable={enable}",
+        "SET_SPEAKER_B": "http://{host}/YamahaExtendedControl/v1/system/setSpeakerB?enable={enable}",
+        "SET_DIMMER": "http://{host}/YamahaExtendedControl/v1/system/setDimmer?value={value}",
+        "SET_ZONE_B_VOLUME_SYNC": "http://{host}/YamahaExtendedControl/v1/system/setZoneBVolumeSync?enable={enable}",
+        "SET_HDMI_OUT_1": "http://{host}/YamahaExtendedControl/v1/system/setHdmiOut1?enable={enable}",
+        "SET_HDMI_OUT_2": "http://{host}/YamahaExtendedControl/v1/system/setHdmiOut2?enable={enable}",
+        "GET_NAME_TEXT": "http://{host}/YamahaExtendedControl/v1/system/getNameText?id={id}",
+        "SET_NAME_TEXT": "http://{host}/YamahaExtendedControl/v1/system/setNameText",
+        "SET_SPEAKER_PATTERN": "http://{host}/YamahaExtendedControl/v1/system/setSpeakerPattern?num={num}",
+        "SET_PARTYMODE": "http://{host}/YamahaExtendedControl/v1/system/setPartyMode?enable={enable}",
     }
 
     @staticmethod
     def get_device_info():
-        """For retrieving basic information of a Device.
-        """
-        return System.URI['GET_DEVICE_INFO']
+        """For retrieving basic information of a Device."""
+        return System.URI["GET_DEVICE_INFO"]
+
     # end-of-method get_device_info
 
     @staticmethod
     def get_features():
-        """For retrieving feature information equipped with a Device.
-        """
-        return System.URI['GET_FEATURES']
+        """For retrieving feature information equipped with a Device."""
+        return System.URI["GET_FEATURES"]
+
     # end-of-method get_features
 
     @staticmethod
     def get_network_status():
-        """For retrieving network related setup/information.
-        """
-        return System.URI['GET_NETWORK_STATUS']
+        """For retrieving network related setup/information."""
+        return System.URI["GET_NETWORK_STATUS"]
+
     # end-of-method get_network_status
 
     @staticmethod
@@ -453,7 +494,8 @@ class System:
         """For retrieving setup/information of overall system function.
         Parameters are readable only when corresponding functions are available in "func_list" of /system/getFeatures.
         """
-        return System.URI['GET_FUNC_STATUS']
+        return System.URI["GET_FUNC_STATUS"]
+
     # end-of-method get_func_status
 
     @staticmethod
@@ -464,14 +506,17 @@ class System:
         Arguments:
         enable -- Specifies Auto Power Standby status.
         """
-        return System.URI['SET_AUTOPOWER_STANDBY'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_AUTOPOWER_STANDBY"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_autopower_standby
 
     @staticmethod
     def get_location_info():
-        """For retrieving Location information.
-        """
-        return System.URI['GET_LOCATION_INFO']
+        """For retrieving Location information."""
+        return System.URI["GET_LOCATION_INFO"]
+
     # end-of-method get_location_info
 
     @staticmethod
@@ -483,11 +528,19 @@ class System:
         Arguments:
         code -- Specifies IR code in 8-digit hex.
         """
-        return System.URI['SEND_IR_CODE'].format(host='{host}', code=code)
+        return System.URI["SEND_IR_CODE"].format(host="{host}", code=code)
+
     # end-of-method send_ir_code
 
     @staticmethod
-    def set_wired_lan(dhcp=None, ip_address=None, subnet_mask=None, default_gateway=None, dns_server_1=None, dns_server_2=None):
+    def set_wired_lan(
+        dhcp=None,
+        ip_address=None,
+        subnet_mask=None,
+        default_gateway=None,
+        dns_server_1=None,
+        dns_server_2=None,
+    ):
         """For setting Wired Network. Network connection is switched to wired by using this API. If no
         parameter is specified, current parameter is used. If set parameter is incomplete, it is possible not
         to provide network avalability.
@@ -503,29 +556,39 @@ class System:
         data = {}
 
         if dhcp is not None:
-            data['dhcp'] = dhcp
+            data["dhcp"] = dhcp
 
         if ip_address is not None:
-            data['ip_address'] = ip_address
+            data["ip_address"] = ip_address
 
         if subnet_mask is not None:
-            data['subnet_mask'] = subnet_mask
+            data["subnet_mask"] = subnet_mask
 
         if default_gateway is not None:
-            data['default_gateway'] = default_gateway
+            data["default_gateway"] = default_gateway
 
         if dns_server_1 is not None:
-            data['dns_server_1'] = dns_server_1
+            data["dns_server_1"] = dns_server_1
 
         if dns_server_2 is not None:
-            data['dns_server_2'] = dns_server_2
+            data["dns_server_2"] = dns_server_2
 
-        return System.URI['SET_WIRED_LAN'].format(host='{host}'), data
+        return System.URI["SET_WIRED_LAN"].format(host="{host}"), data
+
     # end-of-method set_wired_lan
 
     @staticmethod
-    def set_wireless_lan(ssid=None, type=None, key=None, dhcp=None, ip_address=None,
-                         subnet_mask=None, default_gateway=None, dns_server_1=None, dns_server_2=None):
+    def set_wireless_lan(
+        ssid=None,
+        type=None,
+        key=None,
+        dhcp=None,
+        ip_address=None,
+        subnet_mask=None,
+        default_gateway=None,
+        dns_server_1=None,
+        dns_server_2=None,
+    ):
         """For setting Wireless Network (Wi-Fi). Network connection is switched to wireless (Wi-Fi) by using
         this API. If no parameter is specified, current parameter is used. If set parameter is incomplete, it
         is possible not to provide network avalability.
@@ -533,34 +596,35 @@ class System:
         data = {}
 
         if ssid is not None:
-            data['ssid'] = ssid
+            data["ssid"] = ssid
 
         if type is not None:
-            assert type in WIFI, 'Invalid TYPE value!'
-            data['type'] = type
+            assert type in WIFI, "Invalid TYPE value!"
+            data["type"] = type
 
         if key is not None:
-            data['key'] = key
+            data["key"] = key
 
         if dhcp is not None:
-            data['dhcp'] = dhcp
+            data["dhcp"] = dhcp
 
         if ip_address is not None:
-            data['ip_address'] = ip_address
+            data["ip_address"] = ip_address
 
         if subnet_mask is not None:
-            data['subnet_mask'] = subnet_mask
+            data["subnet_mask"] = subnet_mask
 
         if default_gateway is not None:
-            data['default_gateway'] = default_gateway
+            data["default_gateway"] = default_gateway
 
         if dns_server_1 is not None:
-            data['dns_server_1'] = dns_server_1
+            data["dns_server_1"] = dns_server_1
 
         if dns_server_2 is not None:
-            data['dns_server_2'] = dns_server_2
+            data["dns_server_2"] = dns_server_2
 
-        return System.URI['SET_WIRELESS_LAN'].format(host='{host}'), data
+        return System.URI["SET_WIRELESS_LAN"].format(host="{host}"), data
+
     # end-of-method set_wireless_lan
 
     @staticmethod
@@ -572,17 +636,20 @@ class System:
         data = {}
 
         if type is not None:
-            assert type in WIFI_DIRECT, 'Invalid TYPE value!'
-            data['type'] = type
+            assert type in WIFI_DIRECT, "Invalid TYPE value!"
+            data["type"] = type
 
         if key is not None:
-            data['key'] = key
+            data["key"] = key
 
-        return System.URI['SET_WIRELESS_DIRECT'].format(host='{host}'), data
+        return System.URI["SET_WIRELESS_DIRECT"].format(host="{host}"), data
+
     # end-of-method set_wireless_direct
 
     @staticmethod
-    def set_ip_settings(dhcp, ip_address, subnet_mask, default_gateway, dns_server_1, dns_server_2):
+    def set_ip_settings(
+        dhcp, ip_address, subnet_mask, default_gateway, dns_server_1, dns_server_2
+    ):
         """For setting IP. This API only set IP as maintain same network connection status (Wired/Wireless
         Lan/Wireless Direct/Extend). If no parameter is specified, current parameter is used. If set
         parameter is incomplete, it is possible not to provide network avalability.
@@ -590,30 +657,32 @@ class System:
         data = {}
 
         if dhcp is not None:
-            data['dhcp'] = dhcp
+            data["dhcp"] = dhcp
 
         if ip_address is not None:
-            data['ip_address'] = ip_address
+            data["ip_address"] = ip_address
 
         if subnet_mask is not None:
-            data['subnet_mask'] = subnet_mask
+            data["subnet_mask"] = subnet_mask
 
         if default_gateway is not None:
-            data['default_gateway'] = default_gateway
+            data["default_gateway"] = default_gateway
 
         if dns_server_1 is not None:
-            data['dns_server_1'] = dns_server_1
+            data["dns_server_1"] = dns_server_1
 
         if dns_server_2 is not None:
-            data['dns_server_2'] = dns_server_2
+            data["dns_server_2"] = dns_server_2
 
-        return System.URI['SET_WIRED_LAN'].format(host='{host}'), data
+        return System.URI["SET_WIRED_LAN"].format(host="{host}"), data
+
     # end-of-method set_ip_settings
 
     @staticmethod
     def set_network_name(name):
         """For setting Network Name (Friendly Name)"""
-        return System.URI['SET_NETWORK_NAME'].format(host='{host}'), {'name': name}
+        return System.URI["SET_NETWORK_NAME"].format(host="{host}"), {"name": name}
+
     # end-of-method set_network_name
 
     @staticmethod
@@ -621,41 +690,46 @@ class System:
         """For setting AirPlay PIN. This is valid only when "airplay" exists in "func_list" found in
         /system/getFuncStatus.
         """
-        return System.URI['SET_AIRPLAY_PIN'].format(host='{host}'), {'pin': pin}
+        return System.URI["SET_AIRPLAY_PIN"].format(host="{host}"), {"pin": pin}
+
     # end-of-method set_airplay_pin
 
     @staticmethod
     def get_mac_address_filter():
         """For retrieving setup of MAC Address Filter"""
-        return System.URI['GET_MAC_ADDRESS_FILTER']
+        return System.URI["GET_MAC_ADDRESS_FILTER"]
+
     # end-of-method get_mac_address_filter
 
     @staticmethod
     def set_mac_address_filter(filter, *macs):
         """For setting MAC Address Filter"""
         data = {}
-        data['filter'] = filter
+        data["filter"] = filter
 
         for i, address in enumerate(macs):
-            data['address_{}'.format(i+1)]
+            data["address_{}".format(i + 1)]
 
             if i >= 9:
                 break
 
-        return System.URI['SET_MAC_ADDRESS_FILTER'].format(host='{host}'), data
+        return System.URI["SET_MAC_ADDRESS_FILTER"].format(host="{host}"), data
+
     # end-of-method set_mac_address_filter
 
     @staticmethod
     def get_network_standby():
         """For retrieving setup of Network Standby"""
-        return System.URI['GET_NETWORK_STANDBY']
+        return System.URI["GET_NETWORK_STANDBY"]
+
     # end-of-method get_network_standby
 
     @staticmethod
     def set_network_standby(standby):
         """For setting Network Standby"""
-        assert standby in STANDBY, 'Invalid STANDBY value!'
-        return System.URI['SET_NETWORK_STANDBY'].format(host='{host}', standby=standby)
+        assert standby in STANDBY, "Invalid STANDBY value!"
+        return System.URI["SET_NETWORK_STANDBY"].format(host="{host}", standby=standby)
+
     # end-of-method set_network_standby
 
     @staticmethod
@@ -664,19 +738,26 @@ class System:
         functions are available in "func_list" of /system/getFuncStatus. "bluetooth_device" parameter is
         contained in "bluetooth_tx_setting".
         """
-        return System.URI['GET_BLUETOOTH_INFO']
+        return System.URI["GET_BLUETOOTH_INFO"]
+
     # end-of-method get_bluetooth_info
 
     @staticmethod
     def set_bluetooth_standby(enable=True):
         """For setting Bluetooth Standby"""
-        return System.URI['SET_BLUETOOTH_STANDBY'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_BLUETOOTH_STANDBY"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_bluetooth_standby
 
     @staticmethod
     def set_bluetooth_tx_setting(enable=True):
         """For setting Bluetooth transmission"""
-        return System.URI['SET_BLUETOOTH_TX_SETTING'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_BLUETOOTH_TX_SETTING"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_bluetooth_tx_setting
 
     @staticmethod
@@ -686,7 +767,8 @@ class System:
         This device list information is in the cach. If update device list information, excute
         /system/updateBluetoothDeviceList.
         """
-        return System.URI['GET_BLUETOOTH_DEVICE_LIST']
+        return System.URI["GET_BLUETOOTH_DEVICE_LIST"]
+
     # end-of-method get_bluetooth_device_list
 
     @staticmethod
@@ -696,7 +778,8 @@ class System:
         Retrieve update status and list information after finish updating via
         /system/getBluetoothDeviceList.
         """
-        return System.URI['UPDATE_BLUETOOTH_DEVICE_LIST']
+        return System.URI["UPDATE_BLUETOOTH_DEVICE_LIST"]
+
     # end-of-method update_bluetooth_device_list
 
     @staticmethod
@@ -705,7 +788,10 @@ class System:
         true under /system/getFuncStatus.
         It is possible to take time to return this API response issued after connection status is fixed.
         """
-        return System.URI['CONNECT_BLUETOOTH_DEVICE'].format(host='{host}', address=address)
+        return System.URI["CONNECT_BLUETOOTH_DEVICE"].format(
+            host="{host}", address=address
+        )
+
     # end-of-method connect_bluetooth_device
 
     @staticmethod
@@ -714,19 +800,26 @@ class System:
         is true under /system/getFuncStatus.
         This API response is issued immediately after disconnect request is accepted.
         """
-        return System.URI['DISCONNECT_BLUETOOTH_DEVICE']
+        return System.URI["DISCONNECT_BLUETOOTH_DEVICE"]
+
     # end-of-method disconnect_bluetooth_device
 
     @staticmethod
     def set_speaker_a(enable=True):
         """For setting Speaker A status"""
-        return System.URI['SET_SPEAKER_A'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_SPEAKER_A"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_speaker_a
 
     @staticmethod
     def set_speaker_b(enable=True):
         """For setting Speaker A status"""
-        return System.URI['SET_SPEAKER_B'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_SPEAKER_B"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_speaker_b
 
     @staticmethod
@@ -741,25 +834,35 @@ class System:
                  Value Range: calculated by minimum/maximum/step values gotten
                  via /system/getFeatures
         """
-        return System.URI['SET_DIMMER'].format(host='{host}', value=value)
+        return System.URI["SET_DIMMER"].format(host="{host}", value=value)
+
     # end-of-method set_dimmer
 
     @staticmethod
     def set_zone_b_volume_sync(enable):
         """For setting Zone B volume sync."""
-        return System.URI['SET_ZONE_B_VOLUME_SYNC'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_ZONE_B_VOLUME_SYNC"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_zone_b_volume_sync
 
     @staticmethod
     def set_hdmi_out_1(enable):
         """set_hdmi_out_1."""
-        return System.URI['SET_HDMI_OUT_1'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_HDMI_OUT_1"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_hdmi_out_1
 
     @staticmethod
     def set_hdmi_out_2(enable):
         """set_hdmi_out_1."""
-        return System.URI['SET_HDMI_OUT_2'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_HDMI_OUT_2"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_hdmi_out_2
 
     @staticmethod
@@ -771,7 +874,8 @@ class System:
         id -- Specifies ID. If no ID is specified, retrieve all information of
               Zone, Input, Sound program. Refer to "All ID List" for details (documentation).
         """
-        return System.URI['GET_NAME_TEXT'].format(host='{host}', id=id)
+        return System.URI["GET_NAME_TEXT"].format(host="{host}", id=id)
+
     # end-of-method get_name_text
 
     @staticmethod
@@ -790,8 +894,9 @@ class System:
         text -- Specifies text information (UTF-8 within 64 bytes).
                 If "" (empty text) is specified, specifies default text information.
         """
-        data = {'id': id, 'text': text}
-        return System.URI['SET_NAME_TEXT'], data
+        data = {"id": id, "text": text}
+        return System.URI["SET_NAME_TEXT"], data
+
     # end-of-method set_name_text
 
     @staticmethod
@@ -802,7 +907,10 @@ class System:
         Arguments:
         enable -- boolean
         """
-        return System.URI['SET_PARTYMODE'].format(host='{host}', enable=_bool_to_str(enable))
+        return System.URI["SET_PARTYMODE"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_partymode
 
     @staticmethod
@@ -814,10 +922,13 @@ class System:
         num -- int Specifies Speaker pattern number. Values: speaker_pattern
                number from /system/getFeatures
         """
-        return System.URI['SET_SPEAKER_PATTERN'].format(host='{host}', num=num)
+        return System.URI["SET_SPEAKER_PATTERN"].format(host="{host}", num=num)
+
     # end-of-method set_speaker_pattern
 
     pass
+
+
 # end-of-class System
 
 
@@ -825,32 +936,36 @@ class Zone:
     """Zone commands."""
 
     URI = {
-        'GET_STATUS': 'http://{host}/YamahaExtendedControl/v1/{zone}/getStatus',
-        'GET_SOUND_PROGRAM_LIST': 'http://{host}/YamahaExtendedControl/v1/{zone}/getSoundProgramList',
-        'SET_POWER': 'http://{host}/YamahaExtendedControl/v1/{zone}/setPower?power={power}',
-        'SET_SLEEP': 'http://{host}/YamahaExtendedControl/v1/{zone}/setSleep?sleep={sleep}',
-        'SET_VOLUME': 'http://{host}/YamahaExtendedControl/v1/{zone}/setVolume?volume={volume}&step={step}',
-        'SET_MUTE': 'http://{host}/YamahaExtendedControl/v1/{zone}/setMute?enable={enable}',
-        'SET_INPUT': 'http://{host}/YamahaExtendedControl/v1/{zone}/setInput?input={input}&mode={mode}',
-        'SET_SOUND_PROGRAM': 'http://{host}/YamahaExtendedControl/v1/{zone}/setSoundProgram?program={program}',
-        'PREPARE_INPUT_CHANGE': 'http://{host}/YamahaExtendedControl/v1/{zone}/prepareInputChange?input={input}',
-        'SET_3D_SURROUND': 'http://{host}/YamahaExtendedControl/v1/{zone}/set3dSurround?enable={enable}',
-        'SET_DIRECT': 'http://{host}/YamahaExtendedControl/v1/{zone}/setDirect?enable={enable}',
-        'SET_PURE_DIRECT': 'http://{host}/YamahaExtendedControl/v1/{zone}/setPureDirect?enable={enable}',
-        'SET_ENHANCER': 'http://{host}/YamahaExtendedControl/v1/{zone}/setEnhancer?enable={enable}',
-        'SET_TONE_CONTROL': 'http://{host}/YamahaExtendedControl/v1/{zone}/setToneControl?mode={mode}&bass={bass}&treble={treble}',
-        'SET_EQUALIZER': 'http://{host}/YamahaExtendedControl/v1/{zone}/setEqualizer?mode={mode}&low={low}&mid={mid}&high={high}',
-        'SET_BALANCE': 'http://{host}/YamahaExtendedControl/v1/{zone}/setBalance?value={value}',
-        'SET_DIALOGUE_LEVEL': 'http://{host}/YamahaExtendedControl/v1/{zone}/setDialogueLevel?value={value}',
-        'SET_DIALOGUE_LIFT': 'http://{host}/YamahaExtendedControl/v1/{zone}/setDialogueLift?value={value}',
-        'SET_CLEAR_VOICE': 'http://{host}/YamahaExtendedControl/v1/{zone}/setClearVoice?enable={enable}',
-        'SET_SUBWOOFER_VOLUME': 'http://{host}/YamahaExtendedControl/v1/{zone}/setSubwooferVolume?volume={volume}',
-        'SET_BASS_EXTENSION': 'http://{host}/YamahaExtendedControl/v1/{zone}/setBassExtension?enable={enable}',
-        'GET_SIGNAL_INFO': 'http://{host}/YamahaExtendedControl/v1/{zone}/getSignalInfo',
-        'SET_LINK_CONTROL': 'http://{host}/YamahaExtendedControl/v1/{zone}/setLinkControl?control={control}',
-        'SET_LINK_AUDIO_DELAY': 'http://{host}/YamahaExtendedControl/v1/{zone}/setLinkAudioDelay?delay={delay}',
+        "GET_STATUS": "http://{host}/YamahaExtendedControl/v1/{zone}/getStatus",
+        "GET_SOUND_PROGRAM_LIST": "http://{host}/YamahaExtendedControl/v1/{zone}/getSoundProgramList",
+        "SET_POWER": "http://{host}/YamahaExtendedControl/v1/{zone}/setPower?power={power}",
+        "SET_SLEEP": "http://{host}/YamahaExtendedControl/v1/{zone}/setSleep?sleep={sleep}",
+        "SET_VOLUME": "http://{host}/YamahaExtendedControl/v1/{zone}/setVolume?volume={volume}&step={step}",
+        "SET_MUTE": "http://{host}/YamahaExtendedControl/v1/{zone}/setMute?enable={enable}",
+        "SET_INPUT": "http://{host}/YamahaExtendedControl/v1/{zone}/setInput?input={input}&mode={mode}",
+        "SET_INPUT_MODELESS": "http://{host}/YamahaExtendedControl/v1/{zone}/setInput?input={input}",
+        "SET_SOUND_PROGRAM": "http://{host}/YamahaExtendedControl/v1/{zone}/setSoundProgram?program={program}",
+        "PREPARE_INPUT_CHANGE": "http://{host}/YamahaExtendedControl/v1/{zone}/prepareInputChange?input={input}",
+        "SET_3D_SURROUND": "http://{host}/YamahaExtendedControl/v1/{zone}/set3dSurround?enable={enable}",
+        "SET_SURROUND_AI": "http://{host}/YamahaExtendedControl/v1/{zone}/setSurroundAI?enable={enable}",
+        "SET_DIRECT": "http://{host}/YamahaExtendedControl/v1/{zone}/setDirect?enable={enable}",
+        "SET_PURE_DIRECT": "http://{host}/YamahaExtendedControl/v1/{zone}/setPureDirect?enable={enable}",
+        "SET_ENHANCER": "http://{host}/YamahaExtendedControl/v1/{zone}/setEnhancer?enable={enable}",
+        "SET_TONE_CONTROL": "http://{host}/YamahaExtendedControl/v1/{zone}/setToneControl?mode={mode}&bass={bass}&treble={treble}",
+        "SET_EQUALIZER": "http://{host}/YamahaExtendedControl/v1/{zone}/setEqualizer?mode={mode}&low={low}&mid={mid}&high={high}",
+        "SET_BALANCE": "http://{host}/YamahaExtendedControl/v1/{zone}/setBalance?value={value}",
+        "SET_DIALOGUE_LEVEL": "http://{host}/YamahaExtendedControl/v1/{zone}/setDialogueLevel?value={value}",
+        "SET_DIALOGUE_LIFT": "http://{host}/YamahaExtendedControl/v1/{zone}/setDialogueLift?value={value}",
+        "SET_CLEAR_VOICE": "http://{host}/YamahaExtendedControl/v1/{zone}/setClearVoice?enable={enable}",
+        "SET_SUBWOOFER_VOLUME": "http://{host}/YamahaExtendedControl/v1/{zone}/setSubwooferVolume?volume={volume}",
+        "SET_BASS_EXTENSION": "http://{host}/YamahaExtendedControl/v1/{zone}/setBassExtension?enable={enable}",
+        "GET_SIGNAL_INFO": "http://{host}/YamahaExtendedControl/v1/{zone}/getSignalInfo",
+        "SET_LINK_CONTROL": "http://{host}/YamahaExtendedControl/v1/{zone}/setLinkControl?control={control}",
+        "SET_LINK_AUDIO_DELAY": "http://{host}/YamahaExtendedControl/v1/{zone}/setLinkAudioDelay?delay={delay}",
         "GET_SCENE_INFO": "http://{host}/YamahaExtendedControl/v1/{zone}/getSceneInfo",
-        "SET_SCENE": "http://{host}/YamahaExtendedControl/v1/{zone}/recallScene?num={scene}"
+        "SET_SCENE": "http://{host}/YamahaExtendedControl/v1/{zone}/recallScene?num={scene}",
+        "CONTROL_CURSOR": "http://{host}/YamahaExtendedControl/v1/{zone}/controlCursor?cursor={command}",
+        "CONTROL_MENU": "http://{host}/YamahaExtendedControl/v1/{zone}/controlMenu?menu={menu}",
     }
 
     @staticmethod
@@ -861,8 +976,9 @@ class Zone:
             zone -- Specifies target Zone.
                     Values: 'main', 'zone2', 'zone3', 'zone4'
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['GET_STATUS'].format(host='{host}', zone=zone)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["GET_STATUS"].format(host="{host}", zone=zone)
+
     # end-of-method get_status
 
     @staticmethod
@@ -874,8 +990,9 @@ class Zone:
             zone -- Specifies target Zone.
                     Values: 'main', 'zone2', 'zone3', 'zone4'
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['GET_SOUND_PROGRAM_LIST'].format(host='{host}', zone=zone)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["GET_SOUND_PROGRAM_LIST"].format(host="{host}", zone=zone)
+
     # end-of-method get_sound_program_list
 
     @staticmethod
@@ -888,9 +1005,10 @@ class Zone:
             power -- Specifies power status.
                      Values: 'on', 'standby', 'toggle'
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        assert power in POWER, 'Invalid POWER value!'
-        return Zone.URI['SET_POWER'].format(host='{host}', zone=zone, power=power)
+        assert zone in ZONES, "Invalid ZONE value!"
+        assert power in POWER, "Invalid POWER value!"
+        return Zone.URI["SET_POWER"].format(host="{host}", zone=zone, power=power)
+
     # end-of-method set_power
 
     @staticmethod
@@ -905,9 +1023,10 @@ class Zone:
             sleep -- Specifies Sleep Time (unit in minutes)
                      Values: 0, 30, 60, 90, 120
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        assert sleep in SLEEP, 'Invalid SLEEP value!'
-        return Zone.URI['SET_SLEEP'].format(host='{host}', zone=zone, sleep=sleep)
+        assert zone in ZONES, "Invalid ZONE value!"
+        assert sleep in SLEEP, "Invalid SLEEP value!"
+        return Zone.URI["SET_SLEEP"].format(host="{host}", zone=zone, sleep=sleep)
+
     # end-of-method set_sleep
 
     @staticmethod
@@ -926,8 +1045,11 @@ class Zone:
                     (Available on and after API Version 1.17)
                     Values: Value range calculated by minimum/maximum/step values gotten via /system/getFeatures.
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_VOLUME'].format(host='{host}', zone=zone, volume=volume, step=step)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_VOLUME"].format(
+            host="{host}", zone=zone, volume=volume, step=step
+        )
+
     # end-of-method set_volume
 
     @staticmethod
@@ -939,12 +1061,15 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             enable -- Specifying mute status. Default: True.
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_MUTE'].format(host='{host}', zone=zone, enable=_bool_to_str(enable))
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_MUTE"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_mute
 
     @staticmethod
-    def set_input(zone, input, mode):
+    def set_input(zone, input, mode=None):
         """For selecting each Zone input.
 
         Arguments:
@@ -953,8 +1078,15 @@ class Zone:
             input -- Specifies Input ID.
                      Values: Input IDs gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_INPUT'].format(host='{host}', zone=zone, input=input, mode=mode)
+        assert zone in ZONES, "Invalid ZONE value!"
+        if mode:
+            return Zone.URI["SET_INPUT"].format(
+                host="{host}", zone=zone, input=input, mode=mode
+            )
+        return Zone.URI["SET_INPUT_MODELESS"].format(
+            host="{host}", zone=zone, input=input
+        )
+
     # end-of-method set_input
 
     @staticmethod
@@ -967,8 +1099,11 @@ class Zone:
             program -- Specifies Sound Program ID.
                        Values: Sound Program IDs gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_SOUND_PROGRAM'].format(host='{host}', zone=zone, program=program)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_SOUND_PROGRAM"].format(
+            host="{host}", zone=zone, program=program
+        )
+
     # end-of-method set_sound_program
 
     @staticmethod
@@ -984,8 +1119,11 @@ class Zone:
             input -- Specifies Input ID.
                      Values: Input IDs gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['PREPARE_INPUT_CHANGE'].format(host='{host}', zone=zone, input=input)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["PREPARE_INPUT_CHANGE"].format(
+            host="{host}", zone=zone, input=input
+        )
+
     # end-of-method prepare_input_change
 
     @staticmethod
@@ -997,9 +1135,28 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             enable -- Specifies 3D Surround status.
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_3D_SURROUND'].format(host='{host}', zone=zone, enable=_bool_to_str(enable))
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_3D_SURROUND"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_3d_surround
+
+    @staticmethod
+    def set_surround_ai(zone: str, enable: bool):
+        """For setting Surround AI status.
+
+        Arguments:
+            zone -- Specifies target Zone.
+                    Values: 'main', 'zone2', 'zone3', 'zone4'
+            enable -- Specifies Surround AI status.
+        """
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_SURROUND_AI"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
+    # end-of-method set_surround_ai
 
     @staticmethod
     def set_direct(zone, enable):
@@ -1010,8 +1167,11 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             enable -- Specifies Direct status.
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_DIRECT'].format(host='{host}', zone=zone, enable=_bool_to_str(enable))
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_DIRECT"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_direct
 
     @staticmethod
@@ -1023,8 +1183,11 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             enable -- Specifies Pure Direct status.
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_PURE_DIRECT'].format(host='{host}', zone=zone, enable=_bool_to_str(enable))
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_PURE_DIRECT"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_pure_direct
 
     @staticmethod
@@ -1036,8 +1199,11 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             enable -- Specifies Enhancer status.
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_ENHANCER'].format(host='{host}', zone=zone, enable=_bool_to_str(enable))
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_ENHANCER"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_enhancer
 
     @staticmethod
@@ -1058,8 +1224,11 @@ class Zone:
                       Values: Value range calculated by minimum/maximum/step values
                       gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_TONE_CONTROL'].format(host='{host}', zone=zone, mode=mode, bass=bass, treble=treble)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_TONE_CONTROL"].format(
+            host="{host}", zone=zone, mode=mode, bass=bass, treble=treble
+        )
+
     # end-of-method set_tone_control
 
     @staticmethod
@@ -1084,8 +1253,11 @@ class Zone:
                     Values: Value range calculated by minimum/maximum/step values
                     gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_EQUALIZER'].format(host='{host}', zone=zone, mode=mode, low=low, mid=mid, high=high)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_EQUALIZER"].format(
+            host="{host}", zone=zone, mode=mode, low=low, mid=mid, high=high
+        )
+
     # end-of-method set_equalizer
 
     @staticmethod
@@ -1100,8 +1272,9 @@ class Zone:
                      Values: Value range calculated by minimum/maximum/step values
                      gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_BALANCE'].format(host='{host}', zone=zone, value=value)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_BALANCE"].format(host="{host}", zone=zone, value=value)
+
     # end-of-method set_balance
 
     @staticmethod
@@ -1115,8 +1288,11 @@ class Zone:
                      Values: Value range calculated by minimum/maximum/step values
                      gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_DIALOGUE_LEVEL'].format(host='{host}', zone=zone, value=value)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_DIALOGUE_LEVEL"].format(
+            host="{host}", zone=zone, value=value
+        )
+
     # end-of-method set_dialogue_level
 
     @staticmethod
@@ -1130,8 +1306,11 @@ class Zone:
                      Values: Value range calculated by minimum/maximum/step values
                      gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_DIALOGUE_LIFT'].format(host='{host}', zone=zone, value=value)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_DIALOGUE_LIFT"].format(
+            host="{host}", zone=zone, value=value
+        )
+
     # end-of-method set_dialogue_lift
 
     @staticmethod
@@ -1143,8 +1322,9 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             value -- Specifies Clear Voice setting
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_CLEAR_VOICE'].format(host='{host}', zone=zone, value=value)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_CLEAR_VOICE"].format(host="{host}", zone=zone, value=value)
+
     # end-of-method set_clear_voice
 
     @staticmethod
@@ -1158,8 +1338,11 @@ class Zone:
                       Values: Value range calculated by minimum/maximum/step values
                       gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_SUBWOOFER_VOLUME'].format(host='{host}', zone=zone, volume=volume)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_SUBWOOFER_VOLUME"].format(
+            host="{host}", zone=zone, volume=volume
+        )
+
     # end-of-method set_clear_voice
 
     @staticmethod
@@ -1171,8 +1354,11 @@ class Zone:
                     Values: 'main', 'zone2', 'zone3', 'zone4'
             enable -- Specifies Bass Extension setting
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_BASS_EXTENSION'].format(host='{host}', zone=zone, enable=_bool_to_str(enable))
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_BASS_EXTENSION"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
     # end-of-method set_bass_extension
 
     @staticmethod
@@ -1183,8 +1369,9 @@ class Zone:
             zone -- Specifies target Zone.
                     Values: 'main', 'zone2', 'zone3', 'zone4'
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['GET_SIGNAL_INFO'].format(host='{host}', zone=zone)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["GET_SIGNAL_INFO"].format(host="{host}", zone=zone)
+
     # end-of-method get_signal_info
 
     @staticmethod
@@ -1197,8 +1384,11 @@ class Zone:
             control -- Specifies Link Control setting
                        Values: Values gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_LINK_CONTROL'].format(host='{host}', zone=zone, control=control)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_LINK_CONTROL"].format(
+            host="{host}", zone=zone, control=control
+        )
+
     # end-of-method set_link_control
 
     @staticmethod
@@ -1212,25 +1402,28 @@ class Zone:
             delay -- Specifies Link Audio Delay setting
                      Values: Values gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['SET_LINK_AUDIO_DELAY'].format(host='{host}', zone=zone, delay=delay)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_LINK_AUDIO_DELAY"].format(
+            host="{host}", zone=zone, delay=delay
+        )
+
     # end-of-method set_link_audio_delay
 
     @staticmethod
-    def get_scene_info(zone='main'):
+    def get_scene_info(zone="main"):
         """For retrieving a list of Scenes
 
         Arguments:
             zone -- Specifies target Zone.
                     Values: 'main', 'zone2', 'zone3', 'zone4'
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return Zone.URI['GET_SCENE_INFO'].format(host='{host}', zone=zone)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["GET_SCENE_INFO"].format(host="{host}", zone=zone)
 
     # end-of-method get_scene_info
 
     @staticmethod
-    def set_scene(zone='main', scene=1):
+    def set_scene(zone="main", scene=1):
         """
         For setting the Scene for the specified Zone.
 
@@ -1241,13 +1434,39 @@ class Zone:
                      Values: 1-8
         """
         scene = int(scene)
-        assert zone in ZONES, 'Invalid ZONE value!'
-        assert scene in SCENES, 'Invalid SCENE value!'
-        return Zone.URI['SET_SCENE'].format(host='{host}', zone=zone, scene=scene)
+        assert zone in ZONES, "Invalid ZONE value!"
+        assert scene in SCENES, "Invalid SCENE value!"
+        return Zone.URI["SET_SCENE"].format(host="{host}", zone=zone, scene=scene)
+
+    @staticmethod
+    def control_cursor(zone, cursor):
+        """For controlling cursor commands.
+
+        Arguments:
+            zone -- Specifies target Zone.
+                    Values: 'main', 'zone2', 'zone3', 'zone4'
+        """
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["CONTROL_CURSOR"].format(
+            host="{host}", zone=zone, command=cursor
+        )
+
+    @staticmethod
+    def control_menu(zone, menu):
+        """For controlling menu related commands
+
+        Arguments:
+            zone -- Specifies target Zone.
+                    Values: 'main', 'zone2', 'zone3', 'zone4'
+        """
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["CONTROL_MENU"].format(host="{host}", zone=zone, menu=menu)
 
     # end-of-method set_scene
 
     pass
+
+
 # end-of-class Zone
 
 
@@ -1256,15 +1475,15 @@ class Tuner:
     Target inputs: AM / FM / DAB"""
 
     URI = {
-        'GET_PRESET_INFO': 'http://{host}/YamahaExtendedControl/v1/tuner/getPresetInfo?band={band}',
-        'GET_PLAY_INFO': 'http://{host}/YamahaExtendedControl/v1/tuner/getPlayInfo',
-        'SET_BAND' : 'http://{host}/YamahaExtendedControl/v1/tuner/setBand?band={band}',
-        'SET_FREQ': 'http://{host}/YamahaExtendedControl/v1/tuner/setFreq?band={band}&tuning={tuning}&num={num}',
-        'RECALL_PRESET': 'http://{host}/YamahaExtendedControl/v1/tuner/recallPreset?zone={zone}&band={band}&num={num}',
-        'SWITCH_PRESET': 'http://{host}/YamahaExtendedControl/v1/tuner/switchPreset?dir={dir}',
-        'STORE_PRESET': 'http://{host}/YamahaExtendedControl/v1/tuner/storePreset?num={num}',
-        'CLEAR_PRESET': 'http://{host}/YamahaExtendedControl/v1/tuner/clearPreset?band={band}&num={num}',
-        'SET_DAB_SERVICE': 'http://{host}/YamahaExtendedControl/v1/tuner/setDabService?dir={dir}',
+        "GET_PRESET_INFO": "http://{host}/YamahaExtendedControl/v1/tuner/getPresetInfo?band={band}",
+        "GET_PLAY_INFO": "http://{host}/YamahaExtendedControl/v1/tuner/getPlayInfo",
+        "SET_BAND": "http://{host}/YamahaExtendedControl/v1/tuner/setBand?band={band}",
+        "SET_FREQ": "http://{host}/YamahaExtendedControl/v1/tuner/setFreq?band={band}&tuning={tuning}&num={num}",
+        "RECALL_PRESET": "http://{host}/YamahaExtendedControl/v1/tuner/recallPreset?zone={zone}&band={band}&num={num}",
+        "SWITCH_PRESET": "http://{host}/YamahaExtendedControl/v1/tuner/switchPreset?dir={dir}",
+        "STORE_PRESET": "http://{host}/YamahaExtendedControl/v1/tuner/storePreset?num={num}",
+        "CLEAR_PRESET": "http://{host}/YamahaExtendedControl/v1/tuner/clearPreset?band={band}&num={num}",
+        "SET_DAB_SERVICE": "http://{host}/YamahaExtendedControl/v1/tuner/setDabService?dir={dir}",
     }
 
     @staticmethod
@@ -1275,25 +1494,28 @@ class Tuner:
             band -- Specifying a band. Values depend on Preset Type gotten via /system/getFeatures.
                     Values: 'common' (common), 'am', 'fm', 'dab' (separate)
         """
-        assert band in BAND, 'Invalid BAND value!'
-        return Tuner.URI['GET_PRESET_INFO'].format(host='{host}', band=band)
+        assert band in BAND, "Invalid BAND value!"
+        return Tuner.URI["GET_PRESET_INFO"].format(host="{host}", band=band)
+
     # end-of-method get_preset_info
 
     @staticmethod
     def get_play_info():
         """For retrieving playback information of Tuner."""
-        return Tuner.URI['GET_PLAY_INFO']
+        return Tuner.URI["GET_PLAY_INFO"]
+
     # end-of-method get_play_info
 
     @staticmethod
     def set_band(band):
         """For setting Tuner band.
-        
+
         Arguments:
             band -- Specifies Band. Values : 'am', 'fm', 'dab'
         """
-        assert band in BAND, 'Invalid BAND value!'
-        return Tuner.URI['SET_BAND'].format(host='{host}', band=band)
+        assert band in BAND, "Invalid BAND value!"
+        return Tuner.URI["SET_BAND"].format(host="{host}", band=band)
+
     # end-of-method set_freq
 
     @staticmethod
@@ -1307,9 +1529,12 @@ class Tuner:
                        'tp_up', 'tp_down', 'direct'
             num -- Specifies frequency (unit in kHz). Valid only when tuning is 'direct'
         """
-        assert band in BAND, 'Invalid BAND value!'
-        assert tuning in TUNING, 'Invalid TUNING value!'
-        return Tuner.URI['SET_FREQ'].format(host='{host}', band=band, tuning=tuning, num=num)
+        assert band in BAND, "Invalid BAND value!"
+        assert tuning in TUNING, "Invalid TUNING value!"
+        return Tuner.URI["SET_FREQ"].format(
+            host="{host}", band=band, tuning=tuning, num=num
+        )
+
     # end-of-method set_freq
 
     @staticmethod
@@ -1325,9 +1550,12 @@ class Tuner:
             num -- Specifies Preset number.
                    Value: one in the range gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        assert band in PRESET_BAND, 'Invalid BAND value!'
-        return Tuner.URI['RECALL_PRESET'].format(host='{host}', zone=zone, band=band, num=num)
+        assert zone in ZONES, "Invalid ZONE value!"
+        assert band in PRESET_BAND, "Invalid BAND value!"
+        return Tuner.URI["RECALL_PRESET"].format(
+            host="{host}", zone=zone, band=band, num=num
+        )
+
     # end-of-method recall_preset
 
     @staticmethod
@@ -1342,8 +1570,9 @@ class Tuner:
             dir -- Specifies change direction of preset.
                    Values: 'next', 'previous'
         """
-        assert dir in DIR, 'Invalid DIR value!'
-        return Tuner.URI['SWITCH_PRESET'].format(host='{host}', dir=dir)
+        assert dir in DIR, "Invalid DIR value!"
+        return Tuner.URI["SWITCH_PRESET"].format(host="{host}", dir=dir)
+
     # end-of-method switch_preset
 
     @staticmethod
@@ -1354,7 +1583,8 @@ class Tuner:
             num -- Specifying a preset number.
                    Value: one in the range gotten via /system/getFeatures
         """
-        return Tuner.URI['STORE_PRESET'].format(host='{host}', num=num)
+        return Tuner.URI["STORE_PRESET"].format(host="{host}", num=num)
+
     # end-of-method store_preset
 
     @staticmethod
@@ -1363,12 +1593,13 @@ class Tuner:
 
         Arguments:
             band -- Specifies Band. Values depend on Preset Type gotten via /system/getFeatures
-					Values: "common" (common), "am" / "fm" / "dab" (separate)
-			num -- Specifies Preset number
-					Values: one in the range gotten via /system/getFeatures
+                                        Values: "common" (common), "am" / "fm" / "dab" (separate)
+                        num -- Specifies Preset number
+                                        Values: one in the range gotten via /system/getFeatures
         """
-        assert band in PRESET_BAND, 'Invalid BAND value!'
-        return Tuner.URI['CLEAR_PRESET'].format(host='{host}', band=band, num=num)
+        assert band in PRESET_BAND, "Invalid BAND value!"
+        return Tuner.URI["CLEAR_PRESET"].format(host="{host}", band=band, num=num)
+
     # end-of-method clear_preset
 
     @staticmethod
@@ -1379,11 +1610,14 @@ class Tuner:
             dir -- Specifies change direction of services.
                    Values: 'next', 'previous'
         """
-        assert dir in DIR, 'Invalid DIR value!'
-        return Tuner.URI['SET_DAB_SERVICE'].format(host='{host}', dir=dir)
+        assert dir in DIR, "Invalid DIR value!"
+        return Tuner.URI["SET_DAB_SERVICE"].format(host="{host}", dir=dir)
+
     # end-of-method set_dab_service
 
     pass
+
+
 # end-of-class Tuner
 
 
@@ -1392,32 +1626,33 @@ class NetUSB:
     Target Inputs: USB / Network related ones (Server / Net Radio / Pandora / Spotify / AirPlay etc.)"""
 
     URI = {
-        'GET_PRESET_INFO': 'http://{host}/YamahaExtendedControl/v1/netusb/getPresetInfo',
-        'GET_PLAY_INFO': 'http://{host}/YamahaExtendedControl/v1/netusb/getPlayInfo',
-        'SET_PLAYBACK': 'http://{host}/YamahaExtendedControl/v1/netusb/setPlayback?playback={playback}',
-        'TOGGLE_REPEAT': 'http://{host}/YamahaExtendedControl/v1/netusb/toggleRepeat',
-        'TOGGLE_SHUFFLE': 'http://{host}/YamahaExtendedControl/v1/netusb/toggleShuffle',
-        'GET_LIST_INFO': 'http://{host}/YamahaExtendedControl/v1/netusb/getListInfo?input={input}&index={index}&size={size}&lang={lang}&list_id={list_id}',
-        'SET_LIST_CONTROL': 'http://{host}/YamahaExtendedControl/v1/netusb/setListControl?list_id={list_id}&type={type}&index={index}&zone={zone}',
-        'SET_SEARCH_STRING': 'http://{host}/YamahaExtendedControl/v1/netusb/setSearchString',
-        'RECALL_PRESET': 'http://{host}/YamahaExtendedControl/v1/netusb/recallPreset?zone={zone}&num={num}',
-        'STORE_PRESET': 'http://{host}/YamahaExtendedControl/v1/netusb/storePreset?num={num}',
-        'GET_ACCOUNT_STATUS': 'http://{host}/YamahaExtendedControl/v1/netusb/getAccountStatus',
-        'SWITCH_ACCOUNT': 'http://{host}/YamahaExtendedControl/v1/netusb/switchAccount?input={input}&index={index}&timeout={timeout}',
-        'GET_SERVICE_INFO': 'http://{host}/YamahaExtendedControl/v1/netusb/getServiceInfo?input={input}&type={type}&timeout={timeout}',
+        "GET_PRESET_INFO": "http://{host}/YamahaExtendedControl/v1/netusb/getPresetInfo",
+        "GET_PLAY_INFO": "http://{host}/YamahaExtendedControl/v1/netusb/getPlayInfo",
+        "SET_PLAYBACK": "http://{host}/YamahaExtendedControl/v1/netusb/setPlayback?playback={playback}",
+        "TOGGLE_REPEAT": "http://{host}/YamahaExtendedControl/v1/netusb/toggleRepeat",
+        "TOGGLE_SHUFFLE": "http://{host}/YamahaExtendedControl/v1/netusb/toggleShuffle",
+        "GET_LIST_INFO": "http://{host}/YamahaExtendedControl/v1/netusb/getListInfo?input={input}&index={index}&size={size}&lang={lang}&list_id={list_id}",
+        "SET_LIST_CONTROL": "http://{host}/YamahaExtendedControl/v1/netusb/setListControl?list_id={list_id}&type={type}&index={index}&zone={zone}",
+        "SET_SEARCH_STRING": "http://{host}/YamahaExtendedControl/v1/netusb/setSearchString",
+        "RECALL_PRESET": "http://{host}/YamahaExtendedControl/v1/netusb/recallPreset?zone={zone}&num={num}",
+        "STORE_PRESET": "http://{host}/YamahaExtendedControl/v1/netusb/storePreset?num={num}",
+        "GET_ACCOUNT_STATUS": "http://{host}/YamahaExtendedControl/v1/netusb/getAccountStatus",
+        "SWITCH_ACCOUNT": "http://{host}/YamahaExtendedControl/v1/netusb/switchAccount?input={input}&index={index}&timeout={timeout}",
+        "GET_SERVICE_INFO": "http://{host}/YamahaExtendedControl/v1/netusb/getServiceInfo?input={input}&type={type}&timeout={timeout}",
     }
 
     @staticmethod
     def get_preset_info():
-        """For retrieving preset information. Presets are common use among Net/USB related input sources.
-        """
-        return NetUSB.URI['GET_PRESET_INFO']
+        """For retrieving preset information. Presets are common use among Net/USB related input sources."""
+        return NetUSB.URI["GET_PRESET_INFO"]
+
     # end-of-method get_preset_info
 
     @staticmethod
     def get_play_info():
         """For retrieving playback information."""
-        return NetUSB.URI['GET_PLAY_INFO']
+        return NetUSB.URI["GET_PLAY_INFO"]
+
     # end-of-method get_play_info
 
     @staticmethod
@@ -1430,20 +1665,23 @@ class NetUSB:
                         'fast_reverse_start', 'fast_reverse_end', 'fast_forward_start',
                         'fast_forward_end'
         """
-        assert playback in PLAYBACK, 'Invalid PLAYBACK value!'
-        return NetUSB.URI['SET_PLAYBACK'].format(host='{host}', playback=playback)
+        assert playback in PLAYBACK, "Invalid PLAYBACK value!"
+        return NetUSB.URI["SET_PLAYBACK"].format(host="{host}", playback=playback)
+
     # end-of-method set_playback
 
     @staticmethod
     def toggle_repeat():
         """For toggling repeat setting. No direct / discrete setting commands available."""
-        return NetUSB.URI['TOGGLE_REPEAT']
+        return NetUSB.URI["TOGGLE_REPEAT"]
+
     # end-of-method toggle_repeat
 
     @staticmethod
     def toggle_shuffle():
         """For toggling shuffle setting. No direct / discrete setting commands available."""
-        return NetUSB.URI['TOGGLE_SHUFFLE']
+        return NetUSB.URI["TOGGLE_SHUFFLE"]
+
     # end-of-method toggle_shuffle
 
     @staticmethod
@@ -1472,8 +1710,16 @@ class NetUSB:
                                    'search_artist' (Pandora)
                                    'search_track' (Pandora)
         """
-        assert lang in LANG, 'Invalid LANG value!'
-        return NetUSB.URI['GET_LIST_INFO'].format(host='{host}', input=input, index=index, size=size, lang=lang, list_id=list_id)
+        assert lang in LANG, "Invalid LANG value!"
+        return NetUSB.URI["GET_LIST_INFO"].format(
+            host="{host}",
+            input=input,
+            index=index,
+            size=size,
+            lang=lang,
+            list_id=list_id,
+        )
+
     # end-of-method get_list_info
 
     @staticmethod
@@ -1494,9 +1740,12 @@ class NetUSB:
                     move layers at the same time by specifying an index in setSearchString).
                     Values: 'select', 'play', 'return'
         """
-        assert type in TYPE, 'Invalid TYPE value!'
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return NetUSB.URI['SET_LIST_CONTROL'].format(host='{host}', list_id=list_id, type=type, index=index, zone=zone)
+        assert type in TYPE, "Invalid TYPE value!"
+        assert zone in ZONES, "Invalid ZONE value!"
+        return NetUSB.URI["SET_LIST_CONTROL"].format(
+            host="{host}", list_id=list_id, type=type, index=index, zone=zone
+        )
+
     # end-of-method set_list_control
 
     @staticmethod
@@ -1521,16 +1770,18 @@ class NetUSB:
                          Values : 0 ~ 64999
         """
         assert isinstance(search_string, str), "search_string has to be a str"
-        payload = {'string': search_string}
+        payload = {"string": search_string}
         if list_id is not None:
-            search_list_ids = ['main', 'auto_complete', 'search_artist', 'search_track']
-            assert list_id in search_list_ids, "list_id has to be one of the following " + str(search_list_ids)
-            payload['list_id'] = list_id
+            search_list_ids = ["main", "auto_complete", "search_artist", "search_track"]
+            assert list_id in search_list_ids, (
+                "list_id has to be one of the following " + str(search_list_ids)
+            )
+            payload["list_id"] = list_id
         if index is not None:
             assert isinstance(index, int), "index has to be an int"
-            payload['index'] = index
+            payload["index"] = index
 
-        return NetUSB.URI['SET_SEARCH_STRING'], payload
+        return NetUSB.URI["SET_SEARCH_STRING"], payload
 
     # end-of-method set_search_string
 
@@ -1544,8 +1795,9 @@ class NetUSB:
             num -- Specifies Preset number.
                    Value: one in the range gotten via /system/getFeatures
         """
-        assert zone in ZONES, 'Invalid ZONE value!'
-        return NetUSB.URI['RECALL_PRESET'].format(host='{host}', zone=zone, num=num)
+        assert zone in ZONES, "Invalid ZONE value!"
+        return NetUSB.URI["RECALL_PRESET"].format(host="{host}", zone=zone, num=num)
+
     # end-of-method recall_preset
 
     @staticmethod
@@ -1557,13 +1809,15 @@ class NetUSB:
             num -- Specifying a preset number.
                    Value: one in the range gotten via /system/getFeatures
         """
-        return NetUSB.URI['STORE_PRESET'].format(host='{host}', num=num)
+        return NetUSB.URI["STORE_PRESET"].format(host="{host}", num=num)
+
     # end-of-method store_preset
 
     @staticmethod
     def get_account_status():
         """For retrieving account information registered on Device."""
-        return NetUSB.URI['GET_ACCOUNT_STATUS']
+        return NetUSB.URI["GET_ACCOUNT_STATUS"]
+
     # end-of-method get_account_status
 
     @staticmethod
@@ -1579,7 +1833,10 @@ class NetUSB:
                        treat as maximum value.
                        Value: 0 - 60000
         """
-        return NetUSB.URI['SWITCH_ACCOUNT'].format(host='{host}', input=input, index=index, timeout=timeout)
+        return NetUSB.URI["SWITCH_ACCOUNT"].format(
+            host="{host}", input=input, index=index, timeout=timeout
+        )
+
     # end-of-method switch_account
 
     @staticmethod
@@ -1601,10 +1858,15 @@ class NetUSB:
             input -- Specifies target Input ID.
                      Value: 'pandora', 'rhapsody', 'napster'
         """
-        return NetUSB.URI['GET_SERVICE_INFO'].format(host='{host}', input=input, type=type, timeout=timeout)
+        return NetUSB.URI["GET_SERVICE_INFO"].format(
+            host="{host}", input=input, type=type, timeout=timeout
+        )
+
     # end-of-method switch_account
 
     pass
+
+
 # end-of-class Network_USB
 
 
@@ -1612,17 +1874,18 @@ class CD:
     """APIs in regard to CD setting and getting information."""
 
     URI = {
-        'GET_PLAY_INFO': 'http://{host}/YamahaExtendedControl/v1/cd/getPlayInfo',
-        'SET_PLAYBACK': 'http://{host}/YamahaExtendedControl/v1/cd/setPlayback?playback={playback}&num={num}',
-        'TOGGLE_TRAY': 'http://{host}/YamahaExtendedControl/v1/cd/toggleTray',
-        'TOGGLE_REPEAT': 'http://{host}/YamahaExtendedControl/v1/cd/toggleRepeat',
-        'TOGGLE_SHUFFLE': 'http://{host}/YamahaExtendedControl/v1/cd/toggleShuffle',
+        "GET_PLAY_INFO": "http://{host}/YamahaExtendedControl/v1/cd/getPlayInfo",
+        "SET_PLAYBACK": "http://{host}/YamahaExtendedControl/v1/cd/setPlayback?playback={playback}&num={num}",
+        "TOGGLE_TRAY": "http://{host}/YamahaExtendedControl/v1/cd/toggleTray",
+        "TOGGLE_REPEAT": "http://{host}/YamahaExtendedControl/v1/cd/toggleRepeat",
+        "TOGGLE_SHUFFLE": "http://{host}/YamahaExtendedControl/v1/cd/toggleShuffle",
     }
 
     @staticmethod
     def get_play_info():
         """For retrieving playback information of CD."""
-        return CD.URI['GET_PLAY_INFO']
+        return CD.URI["GET_PLAY_INFO"]
+
     # end-of-method get_play_info
 
     @staticmethod
@@ -1639,56 +1902,63 @@ class CD:
                This parameter is valid only when playback "track_select" is specified.
                Values: 1-512
         """
-        assert playback in PLAYBACK, 'Invalid PLAYBACK value!'
-        return CD.URI['SET_PLAYBACK'].format(host='{host}', playback=playback)
+        assert playback in PLAYBACK, "Invalid PLAYBACK value!"
+        return CD.URI["SET_PLAYBACK"].format(host="{host}", playback=playback)
+
     # end-of-method set_playback
 
     @staticmethod
     def toggle_tray():
         """For toggling CD tray Open/Close setting."""
-        return CD.URI['TOGGLE_TRAY']
+        return CD.URI["TOGGLE_TRAY"]
+
     # end-of-method toggle_tray
 
     @staticmethod
     def toggle_repeat():
         """For toggling repeat setting. No direct / discrete setting commands available."""
-        return CD.URI['TOGGLE_REPEAT']
+        return CD.URI["TOGGLE_REPEAT"]
+
     # end-of-method toggle_repeat
 
     @staticmethod
     def toggle_shuffle():
         """For toggling shuffle setting. No direct / discrete setting commands available."""
-        return CD.URI['TOGGLE_SHUFFLE']
+        return CD.URI["TOGGLE_SHUFFLE"]
+
     # end-of-method toggle_shuffle
 
     pass
+
+
 # end-of-class CD
 
 
-class Debug():
-    """Undocumented Debug commands.
-    """
+class Debug:
+    """Undocumented Debug commands."""
 
     URI = {
-        'GET_DIAG_INFO': 'http://{host}/YamahaExtendedControl/v1/debug/getDiagInfo',
-        'GET_STATUS': 'http://{host}/YamahaExtendedControl/v1/debug/getStatus'
+        "GET_DIAG_INFO": "http://{host}/YamahaExtendedControl/v1/debug/getDiagInfo",
+        "GET_STATUS": "http://{host}/YamahaExtendedControl/v1/debug/getStatus",
     }
 
     @staticmethod
     def get_diag_info():
-        """None.
-        """
-        return Debug.URI['GET_DIAG_INFO']
+        """None."""
+        return Debug.URI["GET_DIAG_INFO"]
+
     # end-of-method get_diag_info
 
     @staticmethod
     def get_status():
-        """None.
-        """
-        return Debug.URI['GET_STATUS']
+        """None."""
+        return Debug.URI["GET_STATUS"]
+
     # end-of-method get_status
 
     pass
+
+
 # end-of-class Debug
 
 
@@ -1696,20 +1966,28 @@ class Clock:
     """APIs in regarding the clock/alarm setting and getting information."""
 
     URI = {
-        'GET_CLOCK_SETTINGS': 'http://{host}/YamahaExtendedControl/v1/clock/getSettings',
-        'SET_AUTO_SYNC': 'http://{host}/YamahaExtendedControl/v1/clock/setAutoSync?enable={enable}',
-        'SET_DATE_AND_TIME': 'http://{host}/YamahaExtendedControl/v1/clock/setDateAndTime?date_time={date_time}',
-        'SET_CLOCK_FORMAT': 'http://{host}/YamahaExtendedControl/v1/clock/setClockFormat?format={format}',
-        'SET_ALARM_SETTINGS': 'http://{host}/YamahaExtendedControl/v1/clock/setAlarmSettings',
+        "GET_CLOCK_SETTINGS": "http://{host}/YamahaExtendedControl/v1/clock/getSettings",
+        "SET_AUTO_SYNC": "http://{host}/YamahaExtendedControl/v1/clock/setAutoSync?enable={enable}",
+        "SET_DATE_AND_TIME": "http://{host}/YamahaExtendedControl/v1/clock/setDateAndTime?date_time={date_time}",
+        "SET_CLOCK_FORMAT": "http://{host}/YamahaExtendedControl/v1/clock/setClockFormat?format={format}",
+        "SET_ALARM_SETTINGS": "http://{host}/YamahaExtendedControl/v1/clock/setAlarmSettings",
     }
 
-    DAYS = ["oneday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    DAYS = [
+        "oneday",
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+    ]
 
     @staticmethod
     def get_clock_settings():
-        """For retrieving setting related to Clock function.
-        """
-        return Clock.URI['GET_CLOCK_SETTINGS']
+        """For retrieving setting related to Clock function."""
+        return Clock.URI["GET_CLOCK_SETTINGS"]
 
     @staticmethod
     def set_auto_sync(enable=True):
@@ -1722,7 +2000,9 @@ class Clock:
 
         """
         assert isinstance(enable, bool)
-        return Clock.URI['SET_AUTO_SYNC'].format(host='{host}', enable=_bool_to_str(enable))
+        return Clock.URI["SET_AUTO_SYNC"].format(
+            host="{host}", enable=_bool_to_str(enable)
+        )
 
     @staticmethod
     def set_date_and_time(date_time: [datetime, str]):
@@ -1738,11 +2018,13 @@ class Clock:
                      Alternatively a python datetime object can be used.
         """
         if isinstance(date_time, datetime):
-            dat_str = date_time.strftime('%y%m%d%H%M%S')
+            dat_str = date_time.strftime("%y%m%d%H%M%S")
         else:
-            assert isinstance(date_time, str), "date_time has to be a str or datetime object."
+            assert isinstance(date_time, str), (
+                "date_time has to be a str or datetime object."
+            )
             dat_str = date_time
-        return Clock.URI['SET_DATE_AND_TIME'].format(host='{host}', date_time=dat_str)
+        return Clock.URI["SET_DATE_AND_TIME"].format(host="{host}", date_time=dat_str)
 
     @staticmethod
     def set_clock_format(clock_format: int):
@@ -1754,13 +2036,31 @@ class Clock:
         format -- format of time display
                   Values : 12 (12-hour notation) / 24 (24-hour notation)
         """
-        assert clock_format == 12 or clock_format == 24, "Only 12 and 24 are possible formats"
-        return Clock.URI['SET_CLOCK_FORMAT'].format(host='{host}', format=str(clock_format) + 'h')
+        assert clock_format == 12 or clock_format == 24, (
+            "Only 12 and 24 are possible formats"
+        )
+        return Clock.URI["SET_CLOCK_FORMAT"].format(
+            host="{host}", format=str(clock_format) + "h"
+        )
 
     @staticmethod
-    def set_alarm_settings(alarm_on, volume=None, fade_interval=None, fade_type=None, mode=None, repeat=None, day=None,
-                           enable=None, alarm_time=None, beep=None, playback_type=None,
-                           resume_input=None, preset_type=None, preset_num=None, preset_snooze=None):
+    def set_alarm_settings(
+        alarm_on,
+        volume=None,
+        fade_interval=None,
+        fade_type=None,
+        mode=None,
+        repeat=None,
+        day=None,
+        enable=None,
+        alarm_time=None,
+        beep=None,
+        playback_type=None,
+        resume_input=None,
+        preset_type=None,
+        preset_num=None,
+        preset_snooze=None,
+    ):
         """For setting alarm function.
 
         Arguments:
@@ -1796,64 +2096,75 @@ class Clock:
                          This parameter is valid only when playback_type "preset" is specified.
         """
         assert isinstance(alarm_on, bool), "alarm_on has to be a boolean"
-        payload = {'alarm_on': alarm_on, 'detail': dict()}
+        payload = {"alarm_on": alarm_on, "detail": dict()}
         if volume is not None:
             assert isinstance(volume, int), "volume has to be an integer"
-            payload['volume'] = volume
+            payload["volume"] = volume
         if fade_interval is not None:
             assert isinstance(fade_interval, int), "fade_interval has to be an integer"
-            payload['fade_interval'] = fade_interval
+            payload["fade_interval"] = fade_interval
         if fade_type is not None:
             assert isinstance(fade_type, int), "fade_type has to be an integer"
-            payload['fade_type'] = fade_type
+            payload["fade_type"] = fade_type
         if mode is not None:
             assert isinstance(mode, str), "mode has to be a str"
-            payload['mode'] = mode
+            payload["mode"] = mode
         if repeat is not None:
             assert isinstance(repeat, bool), "repeat has to be a bool"
-            assert day == 'oneday', "repeat is only valid if day is oneday"
-            payload['repeat'] = repeat
+            assert day == "oneday", "repeat is only valid if day is oneday"
+            payload["repeat"] = repeat
         if day is not None:
-            assert day in Clock.DAYS, "day has to be one of the following " + str(Clock.DAYS)
-            payload['detail']['day'] = day
+            assert day in Clock.DAYS, "day has to be one of the following " + str(
+                Clock.DAYS
+            )
+            payload["detail"]["day"] = day
         if enable is not None:
             assert isinstance(enable, bool), "enable has to be a bool"
-            payload['detail']['enable'] = enable
+            payload["detail"]["enable"] = enable
         if alarm_time is not None:
             assert isinstance(alarm_time, str), "time has to be a str"
-            payload['detail']['time'] = alarm_time
+            payload["detail"]["time"] = alarm_time
         if beep is not None:
             assert isinstance(beep, bool), "beep has to be a bool"
-            payload['detail']['beep'] = beep
+            payload["detail"]["beep"] = beep
         if playback_type is not None:
-            assert playback_type in ['resume', 'preset'], "playback_type has to be resume or preset"
-            payload['detail']['playback_type'] = playback_type
-            if playback_type == 'resume':
-                payload['detail']['resume'] = dict()
+            assert playback_type in [
+                "resume",
+                "preset",
+            ], "playback_type has to be resume or preset"
+            payload["detail"]["playback_type"] = playback_type
+            if playback_type == "resume":
+                payload["detail"]["resume"] = dict()
                 if resume_input is not None:
                     assert isinstance(resume_input, str), "resume_input has to be a str"
-                    payload['detail']['resume']['input'] = resume_input
+                    payload["detail"]["resume"]["input"] = resume_input
             else:
-                payload['detail']['preset'] = dict()
+                payload["detail"]["preset"] = dict()
                 if preset_num is not None:
-                    assert isinstance(preset_num, int), "preset_num has to be an integer"
-                    payload['detail']['preset']['num'] = preset_num
+                    assert isinstance(preset_num, int), (
+                        "preset_num has to be an integer"
+                    )
+                    payload["detail"]["preset"]["num"] = preset_num
                 if preset_type is not None:
                     assert isinstance(preset_type, str), "preset_type has to be a str"
-                    payload['detail']['preset']['type'] = preset_type
+                    payload["detail"]["preset"]["type"] = preset_type
                 if preset_snooze is not None:
-                    assert isinstance(preset_snooze, bool), "preset_snooze has to be a bool"
-                    payload['detail']['preset']['snooze'] = preset_snooze
+                    assert isinstance(preset_snooze, bool), (
+                        "preset_snooze has to be a bool"
+                    )
+                    payload["detail"]["preset"]["snooze"] = preset_snooze
 
-        if len(payload['detail']) == 0:
-            del payload['detail']
-        return Clock.URI['SET_ALARM_SETTINGS'], payload
+        if len(payload["detail"]) == 0:
+            del payload["detail"]
+        return Clock.URI["SET_ALARM_SETTINGS"], payload
+
 
 # end-of-class Clock
+
 
 def _bool_to_str(value):
     return str(value).lower()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
