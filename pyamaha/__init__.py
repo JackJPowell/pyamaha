@@ -1314,16 +1314,18 @@ class Zone:
     # end-of-method set_dialogue_lift
 
     @staticmethod
-    def set_clear_voice(zone, value):
+    def set_clear_voice(zone, enable):
         """For setting Clear Voice in each Zone.
 
         Arguments:
             zone -- Specifies target Zone.
                     Values: 'main', 'zone2', 'zone3', 'zone4'
-            value -- Specifies Clear Voice setting
+            enable -- Specifies Clear Voice setting
         """
         assert zone in ZONES, "Invalid ZONE value!"
-        return Zone.URI["SET_CLEAR_VOICE"].format(host="{host}", zone=zone, value=value)
+        return Zone.URI["SET_CLEAR_VOICE"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
 
     # end-of-method set_clear_voice
 
