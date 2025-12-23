@@ -41,7 +41,7 @@ PLAYBACK = [
     "fast_forward_start",
     "fast_forward_end",
 ]
-PRESET_BAND = ["common", "separate"]
+PRESET_BAND = ["common", "separate", "am", "fm", "dab"]
 ZONES = ["main", "zone2", "zone3", "zone4"]
 SERVICE_INFO_TYPE = ["account_list", "licensing", "activation_code"]
 SLEEP = [0, 30, 60, 90, 120]
